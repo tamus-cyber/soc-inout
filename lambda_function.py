@@ -110,33 +110,57 @@ commands = {
 
 
 def slack_handler(bot_event):
-    user_id = urllib.parse.parse_qs(bot_event['body'])['user_id'][0]
+    body = urllib.parse.parse_qs(bot_event['body'])
 
-    raw_text = urllib.parse.parse_qs(bot_event['body'])['text'][0]
-    args = raw_text.split()
+    if 'payload' in body.keys():
+        payload_args = json.loads(body['payload'][0])
 
-    log.debug("[slack_handler] args:{0}".format(args))
+        user_id = payload_args['user']['id']
 
-    if len(args) >= 1:
-        command = args[0]
+        log.debug("[slack_handler] user_id:'{0}' payload_args:'{1}'".format(
+            user_id, payload_args))
 
-    if command not in commands:
-        command = 'help'
+        resp = "Made it through payload"
+    else:
+        payload_args = ''
+        log.debug("[slack_handler] no payload_args")
 
-    message = ""
-    if len(args) >= 2:
-        message = ' '.join(args[1:])
 
-    log.debug("[slack_handler] user_id:'{0}' command:'{1}' message:'{2}'".format(
-        user_id, command, message))
+    if 'text' in body.keys():
+        text_args = body['text'][0].split()
 
-    users = json.loads(os.environ['users'])
-    userid = users[user_id]
+        if len(text_args) >= 1:
+            command = text_args[0]
 
-    log.debug("[slack_handler] translated userid: '{0}' user_id:'{1}'".format(
-        userid, user_id))
+        if command not in commands:
+            command = 'help'
 
-    resp = commands[command](userid, message)
+        message = ""
+        if len(text_args) >= 2:
+            message = ' '.join(text_args[1:])
+
+        if len(text_args) >= 1:
+            command = text_args[0]
+
+        if command not in commands:
+            command = 'help'
+
+        message = ""
+        if len(text_args) >= 2:
+            message = ' '.join(text_args[1:])
+
+        user_id = urllib.parse.parse_qs(bot_event['body'])['user_id'][0]
+        users = json.loads(os.environ['users'])
+        userid = users[user_id]
+
+        log.debug("[slack_handler] user_id:'{0}' translated userid:'{1}' command:'{2}' message:'{3}'".format(
+            user_id, userid, command, message))
+
+        resp = commands[command](userid, message)
+    else:
+        text_args = ''
+        log.debug("[slack_handler] no text_args")
+
 
     return resp
 
