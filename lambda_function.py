@@ -6,6 +6,8 @@ import json
 import logging
 import os
 import urllib.parse
+import hashlib
+import hmac
 
 
 log = logging.getLogger()
@@ -111,6 +113,19 @@ commands = {
 
 def slack_handler(bot_event):
     body = urllib.parse.parse_qs(bot_event['body'])
+
+    msg = 'v0:' + bot_event['headers']['X-Slack-Request-Timestamp'] + ':' + bot_event['body']
+    hash = hmac.new(bytes(os.environ['signing_secret'], 'latin-1'), msg.encode(), hashlib.sha256)
+    hash_digest = hash.hexdigest()
+
+    log.debug("[slack_handler] Asserted signature:'{0}' Computed signature:'{1}'".format(
+        bot_event['headers']['X-Slack-Signature'], hash_digest))
+
+    if ('v0=' + hash_digest) != bot_event['headers']['X-Slack-Signature']:
+        resp = "Invalid signature from Slack"
+
+        return resp
+
 
     if 'payload' in body.keys():
         payload_args = json.loads(body['payload'][0])
