@@ -19,7 +19,6 @@ log.setLevel(logging.DEBUG)
 
 client_id = os.environ['client_id']
 client_secret = os.environ['client_secret']
-bearer_token = os.environ['bearer']
 callback_url = os.environ['callback_url']
 auth_url = "https://www.simpleinout.com/oauth/authorize"
 token_url = "https://www.simpleinout.com/oauth/token"
