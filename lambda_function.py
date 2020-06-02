@@ -211,26 +211,12 @@ def slack_handler(bot_event):
     return resp
 
 
-# TODO: This goes with the OAuth2 integration; this is the redirect URL handler
-
-def redirect_handler(bot_event):
-    raw_text = bot_event['queryStringParameters']
-
-    log.debug("[redirect_handler] queryStringParameters:'{0}'".format(
-        raw_text))
-    resp = raw_text['authCode']
-
-    return resp
-
-
 def lambda_handler(event, context):
     assert context
     log.debug(event)
 
     if (event['httpMethod'] == 'POST') and (event['path'] == '/slack'):
         resp = slack_handler(event)
-    elif (event['httpMethod'] == 'GET') and (event['path'] == '/redirect'):
-        resp = redirect_handler(event)
     else:
         return {
             'statusCode': 400,
