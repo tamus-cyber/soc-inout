@@ -26,27 +26,53 @@ base_url = "https://www.simpleinout.com/api/v4"
 scope = "write"
 
 
-# Messages
-msg_error       = "There was an error updating your status."
-msg_signed_in   = "You have been signed in."
-msg_signed_out  = "You have been signed out."
+# Hook to DynamoDB for the access/refresh tokens
 
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('soc-inout')
+token_data = table.get_item(
+    Key={'env': 'prod'}
+)
+bearer_token = "Bearer " + token_data['Item']['access_token']
+token_expires = token_data['Item']['expires']
 
-# TODO: The auth function is still under development; if anyone knows how to make a
-# Slack client launch an interactive OAuth2 process, please let me know
+# If the access token has expired, use refresh token to get a new one
 
-def auth(userid, message):
-    log.info("[simple_sign_in] auth")
+if (time.time() > token_expires):
+    log.info("[simple_sign_in] refresh token")
 
-    url = auth_url + "?response_type=code&client_id" + client_id + "&redirect_uri=" + callback_url + "&scope=write"
+    url = token_url
 
+    payload = {
+        "grant_type": "refresh_token",
+        "refresh_token": token_data['Item']['refresh_token']
+    }
     headers = { "Content-Type": "application/json" }
 
-    resp = requests.get(url, headers=headers)
+    resp = requests.post(url, headers=headers, json=payload)
+    resp_json = resp.json()
 
-    log.info("[simple_sign_in] response: " + resp.text)
+    log.info("[simple_sign_in] refresh token response: " + format(resp_json))
 
-    return
+    try:
+        resp_json
+    except NameError:
+        response = msg_error
+    else:
+        table.put_item(
+            Item={
+                'env': 'prod',
+                'access_token': resp_json['access_token'],
+                'expires': (resp_json['created_at'] + resp_json['expires_in']),
+                'refresh_token': resp_json['refresh_token']
+            }
+        )
+        log.info("[simple_sign_in] updated DynamoDB with new token data")
+        bearer_token = "Bearer " + resp_json['access_token']
+else:
+    log.info("[simple_sign_in] using existing token data")
+
+
 
 
 def sign_in(userid, message):
