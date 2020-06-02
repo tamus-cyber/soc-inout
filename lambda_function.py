@@ -1,13 +1,13 @@
 from __future__ import print_function
-import requests
 
-import re
+import hashlib
+import hmac
 import json
 import logging
 import os
+import re
+import requests
 import urllib.parse
-import hashlib
-import hmac
 
 
 log = logging.getLogger()
