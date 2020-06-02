@@ -73,6 +73,10 @@ else:
     log.info("[simple_sign_in] using existing token data")
 
 
+# Messages
+msg_error       = "There was an error updating your status."
+msg_signed_in   = "You have been signed in."
+msg_signed_out  = "You have been signed out."
 
 
 def sign_in(userid, message):
