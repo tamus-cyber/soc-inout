@@ -157,12 +157,12 @@ def slack_handler(bot_event):
 
         return resp
 
+    # Initialize variables used in processing the command
+    command = ''
+    message = ''
 
     if 'payload' in body.keys():
         payload_args = json.loads(body['payload'][0])
-        command = ''
-        message = ''
-
         user_id = payload_args['user']['id']
 
         log.debug("[slack_handler] user_id:'{0}' payload_args:'{1}'".format(
