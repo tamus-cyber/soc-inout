@@ -160,6 +160,8 @@ def slack_handler(bot_event):
 
     if 'payload' in body.keys():
         payload_args = json.loads(body['payload'][0])
+        command = ''
+        message = ''
 
         user_id = payload_args['user']['id']
 
@@ -171,8 +173,7 @@ def slack_handler(bot_event):
         payload_args = ''
         log.debug("[slack_handler] no payload_args")
 
-
-    if 'text' in body.keys():
+    if 'text' in body.keys():     # Process slash command
         text_args = body['text'][0].split()
 
         if len(text_args) >= 1:
@@ -181,7 +182,6 @@ def slack_handler(bot_event):
         if command not in commands:
             command = 'help'
 
-        message = ""
         if len(text_args) >= 2:
             message = ' '.join(text_args[1:])
 
@@ -191,11 +191,16 @@ def slack_handler(bot_event):
         if command not in commands:
             command = 'help'
 
-        message = ""
         if len(text_args) >= 2:
             message = ' '.join(text_args[1:])
 
         user_id = urllib.parse.parse_qs(bot_event['body'])['user_id'][0]
+    elif 'callback_id' in payload_args.keys():  # Process shortcut
+        if payload_args['callback_id'] in ['in', 'out']:
+            command = payload_args['callback_id']
+            user_id = payload_args['user']['id']
+
+    if command != 'help':
         users = json.loads(os.environ['users'])
         userid = users[user_id]
 
@@ -205,7 +210,7 @@ def slack_handler(bot_event):
         resp = commands[command](userid, message)
     else:
         text_args = ''
-        log.debug("[slack_handler] no text_args")
+        log.debug("[slack_handler] no command args")
 
 
     return resp
