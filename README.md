@@ -25,7 +25,8 @@ In Slack:
   - client_id
   - client_secret
   - signing_secret
-- Configure the environment variable `users` as a JSON dictionary of Slack user IDs with the value of each being the Simple In/Out user ID
+- Configure the environment variable `users` as a JSON dictionary of Slack user IDs with the value of each being the Simple In/Out user ID, e.g. 
+  ``` { "slackID_1": simpleID_1, "slackID_2": simpleID_2, ... } ```
 
 #### API Gateway
 - Create an API gateway
